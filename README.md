@@ -112,3 +112,15 @@ UPSTREAM_API_KEY_PREFIX=
 pip install -r requirements.txt
 uvicorn app:app --host 0.0.0.0 --port 8080
 ```
+
+## Upstream Agent Example
+
+If you want a ready-made upstream service to place behind the shim, use:
+
+- [`examples/upstream_agent.py`](/Users/gibson/Work/langgraph-shim/examples/upstream_agent.py)
+- [`examples/requirements.txt`](/Users/gibson/Work/langgraph-shim/examples/requirements.txt)
+- [`examples/.env.example`](/Users/gibson/Work/langgraph-shim/examples/.env.example)
+
+Deploy that app in Hopsworks, then point `UPSTREAM_CHAT_URL` on the shim to the
+agent's `/chat` endpoint. Keep `NEXT_PUBLIC_API_URL` in `agent-chat-ui`
+pointing at the shim, not the agent.
