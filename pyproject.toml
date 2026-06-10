@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "langgraph-shim"
+version = "0.1.0"
+description = "LangGraph-compatible shim for simple HTTP or in-process chat backends"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115",
+  "httpx>=0.27",
+  "uvicorn[standard]>=0.30",
+]
+
+[tool.setuptools]
+py-modules = ["app", "store"]
+packages = ["langgraph_shim"]
+

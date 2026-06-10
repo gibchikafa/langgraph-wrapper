@@ -91,6 +91,18 @@ The shim also falls back to `LANGSMITH_API_KEY`, `LANGGRAPH_API_KEY`, and
 3. Point `agent-chat-ui` at the Hopsworks app URL for `NEXT_PUBLIC_API_URL`.
 4. Keep `NEXT_PUBLIC_ASSISTANT_ID` aligned with `LANGGRAPH_SHIM_ASSISTANT_ID`.
 
+## In-Process Agent Mode
+
+If you want to run the shim and the agent logic in the same pod, install the
+package into the `python-agent-pipeline` image and use the shim as a library:
+
+1. Add `langgraph-shim` to `docker-images/base-image/python-agent-pipeline/requirements.txt`.
+2. Import `app` and `set_upstream_handler` from `langgraph_shim.app`.
+3. Set the handler to your local `predict()` coroutine before starting Uvicorn.
+
+See [`examples/agent_with_shim.py`](/Users/gibson/Work/langgraph-shim/examples/agent_with_shim.py)
+for a complete template.
+
 If the upstream backend is behind Istio and requires an API key, use:
 
 ```bash

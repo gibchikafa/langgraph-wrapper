@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import json
 import os
 import uuid
@@ -72,6 +73,7 @@ def load_settings() -> LangGraphShimSettings:
 
 SETTINGS = load_settings()
 STORE = LangGraphShimStore(SETTINGS.db_path)
+UPSTREAM_HANDLER: Callable[[dict[str, Any]], Any] | None = None
 
 app = FastAPI(title="LangGraph Shim", version="0.1.0")
 
@@ -89,6 +91,17 @@ class UpstreamError(RuntimeError):
         super().__init__(message)
         self.status_code = status_code
         self.detail = detail
+
+
+def set_upstream_handler(handler: Callable[[dict[str, Any]], Any] | None) -> None:
+    """Install a local handler instead of calling `UPSTREAM_CHAT_URL`.
+
+    The handler receives the same payload the shim would POST upstream.
+    Its return value is treated like a normal upstream response body.
+    """
+
+    global UPSTREAM_HANDLER
+    UPSTREAM_HANDLER = handler
 
 
 def sse_event(event: str, data: Any, event_id: int | None = None) -> str:
@@ -151,6 +164,18 @@ async def call_upstream(
     settings: LangGraphShimSettings,
     payload: dict[str, Any],
 ) -> tuple[Any, str, int]:
+    if UPSTREAM_HANDLER is not None:
+        result = UPSTREAM_HANDLER(payload)
+        if inspect.isawaitable(result):
+            result = await result
+        raw_text = extract_text(result)
+        if not raw_text:
+            if isinstance(result, str):
+                raw_text = result.strip()
+            else:
+                raw_text = json.dumps(result, ensure_ascii=False, separators=(",", ":"), default=str)
+        return result, raw_text, 200
+
     headers = build_upstream_headers(settings)
     async with httpx.AsyncClient(timeout=settings.upstream_timeout) as client:
         response = await client.request(
